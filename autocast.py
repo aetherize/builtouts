@@ -1,4 +1,4 @@
-from typing  import Callable, TypeVar, ParamSpec
+from typing  import Any, Callable, TypeVar, ParamSpec
 from inspect import getfullargspec, getcallargs
 
 __all__ = ['autocast', 'cast']
@@ -36,7 +36,7 @@ def autocast(force: bool = False) -> Callable[[Callable[P, RT]], Callable[P, RT]
         fnspec = getfullargspec(fn)
         types  = fnspec.annotations
         def wrapper(*args: P.args, **kwargs: P.kwargs) -> RT:
-            nargs  = list()
+            nargs  = list[Any]()
             mapped = getcallargs(fn, *args, **kwargs)
 
             for arg, val in mapped.items():
