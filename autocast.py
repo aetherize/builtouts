@@ -67,6 +67,7 @@ def autocast(force: bool = False) -> Callable[[Callable[P, RT]], Callable[P, RT]
         return wrapper
     return decorator
 
+
 if __name__ == '__main__':
     @autocast(force=True)
     def foo(bar: int, baz: float) -> int:
