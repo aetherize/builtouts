@@ -1,4 +1,4 @@
-from typing  import Any, Callable, TypeVar, ParamSpec
+from typing  import Any, Callable, TypeVar, ParamSpec, Optional
 from inspect import getfullargspec, getcallargs
 
 __all__ = ['autocast', 'cast']
@@ -6,7 +6,7 @@ __all__ = ['autocast', 'cast']
 
 O = TypeVar('O')
 T = TypeVar('T')
-def cast(_obj: O, _to: type[T] = None, force: bool = False) -> O | T:
+def cast(_obj: O, _to: Optional[type[T]] = None, force: bool = False) -> O | T:
     if _to and not isinstance(_obj, _to):
         try:
             return _to(_obj)
