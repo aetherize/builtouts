@@ -43,18 +43,15 @@ def autocast(force: bool = False) -> Callable[[Callable[P, RT]], Callable[P, RT]
 
                 caster = types.get(arg, None)
 
-                arg_is_varargs  = arg == fnspec.varargs
-                if arg_is_varargs:
+                if arg == fnspec.varargs:
                     nargs.extend(v if not caster else realcast(v, caster, force) for v in val)
                     continue
 
-                arg_is_varkw    = arg == fnspec.varkw
-                if arg_is_varkw:
+                if arg == fnspec.varkw:
                     kwargs.update({k: v if not caster else realcast(v, caster, force) for k,v in val})
                     continue
 
-                arg_is_kwonly   = arg in fnspec.kwonlyargs
-                if arg_is_kwonly:
+                if arg in fnspec.kwonlyargs:
                     kwargs[arg] = val if not caster else realcast(val, caster, force)
                     continue
 
