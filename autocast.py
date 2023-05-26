@@ -1,18 +1,18 @@
-from typing  import Any, Callable, TypeVar, ParamSpec, Optional
+from typing  import Any, Callable, TypeVar, ParamSpec, cast
 from inspect import getfullargspec, getcallargs
 
-__all__ = ['autocast', 'cast']
+__all__ = ['autocast', 'realcast', 'cast']
 
 
-O = TypeVar('O')
 T = TypeVar('T')
-def cast(_obj: O, _to: Optional[type[T]] = None, force: bool = False) -> O | T:
-    if _to and not isinstance(_obj, _to):
+def realcast(_obj: Any, _to: type[T], force: bool = False) -> T:
+    if not isinstance(_obj, _to):
         try:
-            return _to(_obj)
+            return cast(_to, _to(_obj))
         except:
-            if force: raise TypeError(f'Could not cast \'{_obj}\' to {_to}')
-    return _obj
+            if force:
+                raise TypeError(f'Could not cast \'{_obj}\' to {_to}')
+    return cast(T, _obj)
 
 
 P  = ParamSpec('P')
@@ -40,28 +40,31 @@ def autocast(force: bool = False) -> Callable[[Callable[P, RT]], Callable[P, RT]
             mapped = getcallargs(fn, *args, **kwargs)
 
             for arg, val in mapped.items():
+
                 caster = types.get(arg, None)
 
-                arg_is_kwargs = arg == fnspec.varkw
-                if arg_is_kwargs:
-                    kwargs.update({k: cast(v, caster, force) for k,v in val})
+                arg_is_varargs  = arg == fnspec.varargs
+                if arg_is_varargs:
+                    nargs.extend(v if not caster else realcast(v, caster, force) for v in val)
                     continue
 
-                arg_is_nargs  = arg == fnspec.varargs
-                if arg_is_nargs:
-                    for v in val:
-                        nargs.append(cast(v, caster, force))
+                arg_is_varkw    = arg == fnspec.varkw
+                if arg_is_varkw:
+                    kwargs.update({k: v if not caster else realcast(v, caster, force) for k,v in val})
                     continue
 
-                arg_is_kwonly = arg in fnspec.kwonlyargs
+                arg_is_kwonly   = arg in fnspec.kwonlyargs
                 if arg_is_kwonly:
-                    kwargs[arg] = cast(val, caster, force)
-                else:
-                    nargs.append(cast(val, caster, force))
+                    kwargs[arg] = val if not caster else realcast(val, caster, force)
+                    continue
 
-            result = fn(*nargs, **kwargs) # type: ignore
+                nargs.append(val if not caster else realcast(val, caster, force))
+
+            nargs  = cast(type(args), nargs)
+            result = fn(*nargs, **kwargs)
             caster = types.get('return', None)
-            return cast(result, caster, force)
+            return result if not caster else realcast(result, caster, force)
+
         for attr in ('__name__', '__qualname__', '__annotations__', '__module__', '__doc__'):
             setattr(wrapper, attr, getattr(fn, attr, getattr(wrapper, attr)))
         return wrapper
