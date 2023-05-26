@@ -3,6 +3,6 @@
 ---
 ### Notes
 * this is in early development
-* autocast may get @overloads support in the future
-* restrict still has my-py strict mode errors
+* autocast may get @overload support in the future
+* restrict still has mypy strict mode errors
 * restrict may break if no other type is specified (will be fixed)
